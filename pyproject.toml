@@ -1,0 +1,17 @@
+[project]
+name = "aws-powerflow-demo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "boto3>=1.40.68",
+    "grid-feedback-optimizer>=0.1.11",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.9.0",
+    "isort>=7.0.0",
+    "pytest>=8.4.2",
+]

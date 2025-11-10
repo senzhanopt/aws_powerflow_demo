@@ -31,10 +31,10 @@ def main():
         is_congested[i] = power_flow_solver.is_congested(output_data)
     
     # save results to json
-    with open("data/is_congested.json", "w") as f:
+    with open("result/is_congested.json", "w") as f:
         json.dump(is_congested, f, indent=4)
 
-    print("✅ Congestion results saved to data/is_congested.json")
+    print("✅ Congestion results saved to result/is_congested.json")
 
 
 if __name__ == "__main__":

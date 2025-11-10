@@ -1,17 +1,17 @@
 # AWS Power System Demo
 
-Demo of AWS for modern power system calculations.
+Demo of Amazon Web Services (AWS) for modern power system calculations.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 - **AWS EC2 / Lambda** – for computation 
 - **S3** – for data storage  
 - **Python** – for algorithm development  
 
 ---
 
-## EC2 with SSH
+## 🛠️ EC2 with SSH
 
 ### 1️⃣ On AWS
 
@@ -22,37 +22,21 @@ Demo of AWS for modern power system calculations.
 3. Key pair: download `.pem` file.
 
 
-### 2️⃣ SSH (from Git Bash)
+### 2️⃣ Upload files (from WSL Ubuntu)
 
-1. Set key permission
+1. Set key permission:
 
 ```bash
 chmod 400 ~/.ssh/my-key.pem
 ```
 
-e.g.
-```bash
-chmod 400 /d/aws_powerflow_demo/powerflow_demo.pem
-```
-
 2. Connect to EC2 via SSH
 
 ```bash
-ssh -i "~/.ssh/my-key.pem" ubuntu@<EC2_PUBLIC_IP>
-```
-
-e.g.
-```bash
-ssh -i /d/aws_powerflow_demo/powerflow_demo.pem ubuntu@13.60.189.133
+ssh -i ~/.ssh/my-key.pem ubuntu@<EC2_PUBLIC_IP>
 ```
 
 3. Create project folder and exit
-```bash
-mkdir -p ~/project
-exit
-```
-
-e.g.
 ```bash
 mkdir -p ~/aws_powerflow_demo
 exit
@@ -61,28 +45,33 @@ exit
 4. Upload files from local machine
 
 ```bash
-scp -i "~/.ssh/my-key.pem" -r ./project ubuntu@<EC2_PUBLIC_IP>:~/project
+scp -i ~/.ssh/my-key.pem -r ./ ubuntu@<EC2_PUBLIC_IP>:~/aws_powerflow_demo/
 ```
 
-e.g.
+**Recommended**: use `rsync` to skip steps 2-4
+
 ```bash
-scp -i /d/aws_powerflow_demo/powerflow_demo.pem -r /d/aws_powerflow_demo/data /d/aws_powerflow_demo/main.py /d/aws_powerflow_demo/.python-version /d/aws_powerflow_demo/pyproject.toml ubuntu@13.60.189.133:~/aws_powerflow_demo/
+rsync -avz -e "ssh -i ~/.ssh/my_key.pem" --exclude '.git' --exclude '.venv' ./ ubuntu@<EC2_PUBLIC_IP>:~/aws_powerflow_demo/
 ```
-
 
 
 ### 3️⃣ Update Ubuntu and Install UV
 
+Connect to EC2 via SSH:
 
+```bash
+ssh -i ~/.ssh/my-key.pem ubuntu@<EC2_PUBLIC_IP>
+```
+Install `uv`:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-If `curl` or `git` not available:
+If `curl` not available:
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl git
+sudo apt install -y curl
 ```
 
 Reload shell and verify installation
@@ -98,7 +87,7 @@ uv init
 uv add grid-feedback-optimizer
 ```
 
-or
+or (with `.python-version`, `pyproject.toml` or `uv.lock`)
 
 ```bash
 uv sync

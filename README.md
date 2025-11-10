@@ -13,7 +13,7 @@ Demo of AWS for modern power system calculations.
 
 ## EC2 with SSH
 
-### On AWS
+### 1️⃣ On AWS
 
 1. Launch an EC2 instance
 
@@ -22,7 +22,7 @@ Demo of AWS for modern power system calculations.
 3. Key pair: download `.pem` file.
 
 
-### SSH (from Git Bash)
+### 2️⃣ SSH (from Git Bash)
 
 1. Set key permission
 
@@ -71,7 +71,7 @@ scp -i /d/aws_powerflow_demo/powerflow_demo.pem -r /d/aws_powerflow_demo/data /d
 
 
 
-### Update Ubuntu and Install UV
+### 3️⃣ Update Ubuntu and Install UV
 
 
 
@@ -91,7 +91,7 @@ source ~/.bashrc
 uv --version
 ```
 
-### Install Python and dependencies
+### 4️⃣ Install Python and dependencies
 ```bash
 uv python pin 3.12
 uv init
@@ -109,7 +109,7 @@ uv sync
 uv run main.py
 ```
 
-### Set up cron job when useful
+### 5️⃣ Set up cron job (optional)
 
 Edit
 ```bash
@@ -129,6 +129,11 @@ crontab -l
 Check log
 ```bash
 cat cron.log
+```
+
+Remove or comment out cronjob
+```bash
+crontab -r
 ```
 ---
 

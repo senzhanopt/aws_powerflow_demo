@@ -23,8 +23,7 @@ def write_json_to_s3(data, key):
     s3.put_object(Bucket=BUCKET_NAME, Key=key,
                   Body=json.dumps(data, indent=4).encode('utf-8'))
 
-# Main workflow
-def main():
+def run_powerflow(scenario_key):
     network_data = read_json_from_s3("grid.json")
     network = Network(**network_data)
     solver = PowerFlowSolver(network)
@@ -34,7 +33,7 @@ def main():
     load_base = np.column_stack([np.array([l.p_norm for l in network.loads]),
                                  np.array([l.q_norm for l in network.loads])])
 
-    scenario = read_csv_from_s3("scenario.csv")
+    scenario = read_csv_from_s3(scenario_key)
     is_congested = {}
 
     for i, s in enumerate(scenario.scenario_id):
@@ -43,7 +42,17 @@ def main():
         is_congested[int(s)] = solver.is_congested(output)
 
     write_json_to_s3(is_congested, "is_congested.json")
-    print("✅ Results saved to s3://powerflow-data/is_congested.json")
+    print("✅ Results saved to s3://{}/is_congested.json".format(BUCKET_NAME))
 
-if __name__ == "__main__":
-    main()
+# Lambda handler
+def lambda_handler(event, context):
+    # Get the key of the uploaded object
+    for record in event['Records']:
+        s3_key = record['s3']['object']['key']
+        if s3_key.endswith("scenario.csv"):
+            run_powerflow(s3_key)
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Power flow completed!')
+    }

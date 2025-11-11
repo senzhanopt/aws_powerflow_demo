@@ -7,6 +7,7 @@ Demo of Amazon Web Services (AWS) for modern power system calculations.
 ## Tech Stack
 - **AWS EC2 / Lambda** – for computation 
 - **S3** – for data storage  
+- **ECS** - for docker images
 - **Python** – for algorithm development  
 
 ---
@@ -95,7 +96,7 @@ uv sync
 
 ### Run
 ```bash
-uv run main_ec2.py
+uv run pf_ec2.py
 ```
 
 ### 5️⃣ Set up cron job (optional)
@@ -107,7 +108,7 @@ crontab -e
 e.g.
 
 ```bash
-* * * * * cd /home/ubuntu/aws_powerflow_demo && /home/ubuntu/aws_powerflow_demo/.venv/bin/python /home/ubuntu/aws_powerflow_demo/main.py >> /home/ubuntu/aws_powerflow_demo/cron.log 2>&1
+* * * * * cd /home/ubuntu/aws_powerflow_demo && /home/ubuntu/aws_powerflow_demo/.venv/bin/python /home/ubuntu/aws_powerflow_demo/pf_ec2.py >> /home/ubuntu/aws_powerflow_demo/cron.log 2>&1
 ```
 
 Check cron jobs
@@ -178,7 +179,7 @@ s3.upload_file('./data/grid.json', 'aws-powerflow-data', 'grid.json')
 
 ### 4️⃣ Run on local machine or on `EC2`:
 ```bash
-uv run main_ec2_s3.py
+uv run pf_ec2_s3.py
 ```
 
 The script will read the input files from `S3`, run the simulation locally, and write `is_congested.json` back to `S3`.
@@ -186,6 +187,97 @@ The script will read the input files from `S3`, run the simulation locally, and 
 ---
 
 ## 🛠️ Lambda with S3
+
+### 1️⃣ Create a `Dockerfile` and lambda handler function
+
+Build Docker image:
+```bash
+Docker build -t pf_lambda_s3 .
+```
+
+### 2️⃣ Push to AWS ECR
+1. Create an ECR repo:
+```bash
+aws ecr create-repository --repository-name pf_lambda_s3
+```
+
+2. Authenticate Docker:
+```bash
+aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<region>.amazonaws.com
+```
+
+<!--
+aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 513689973492.dkr.ecr.eu-north-1.amazonaws.com
+-->
+
+3. Tag and push:
+```bash
+docker tag pf_lambda_s3:latest <account-id>.dkr.ecr.<region>.amazonaws.com/pf_lambda_s3:latest
+docker push <account-id>.dkr.ecr.<region>.amazonaws.com/pf_lambda_s3:latest
+```
+
+<!--
+docker tag pf_lambda_s3:latest 513689973492.dkr.ecr.eu-north-1.amazonaws.com/pf_lambda_s3:latest
+docker push 513689973492.dkr.ecr.eu-north-1.amazonaws.com/pf_lambda_s3:latest
+-->
+
+### 3️⃣ On AWS `Lambda`
+1. Create function using image
+2. Configure memory, timeout
+3. Add trigger using `S3`, set IAM role
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::aws-powerflow-data",
+                "arn:aws:s3:::aws-powerflow-data/*"
+            ]
+        }
+    ]
+}
+```
+
+### 4️⃣ Test `Lambda` manually
+```json
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": { "name": "aws-powerflow-data" },
+        "object": { "key": "scenario.csv" }
+      }
+    }
+  ]
+}
+
+```
+
+Test upload new `scenario.csv` with 
+```bash
+aws s3 cp data/scenario.csv s3://aws-powerflow-data/scenario.csv
+```
+and check `S3` to see if the function is triggered.
+
+
+NB: If dependencies are small (less than 250 MB), one can also upload a `zip` file to `Lambda` rather than building a Docker image. Build with:
+```bash
+mkdir package
+pip install -t package/ grid-feedback-optimizer
+cp pf_lambda_s3.py package/
+cd package
+zip -r ../pf_lambda_s3.zip .
+cd ..
+
+```
 
 ---
 

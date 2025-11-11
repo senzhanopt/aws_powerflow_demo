@@ -95,7 +95,7 @@ uv sync
 
 ### Run
 ```bash
-uv run main.py
+uv run main_ec2.py
 ```
 
 ### 5️⃣ Set up cron job (optional)
@@ -124,6 +124,69 @@ Remove or comment out cronjob
 ```bash
 crontab -r
 ```
+
+---
+
+## 🛠️ EC2 with S3
+
+### 1️⃣ On AWS
+
+1. Create a bucket `aws-powerflow-data`
+
+2. Create *Access key* under security credentials
+
+### 2️⃣ Install `AWS CLI` and upload files to `S3`
+
+Install:
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install curl unzip -y
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+```
+
+Configure credentials using created *Access key*:
+```bash
+aws configure
+```
+
+Upload files to `S3` bucket:
+```bash
+aws s3 cp ./data/grid.json s3://aws-powerflow-data/grid.json
+aws s3 cp ./data/scenario.csv s3://aws-powerflow-data/scenario.csv
+```
+
+Remove by:
+```bash
+aws s3 rm s3://aws-powerflow-data/grid.json
+aws s3 rm s3://aws-powerflow-data/scenario.csv
+```
+
+Alternatively, upload files by running `python`:
+```python
+import boto3
+
+s3 = boto3.client('s3')
+s3.upload_file('./data/scenario.csv', 'aws-powerflow-data', 'scenario.csv')
+s3.upload_file('./data/grid.json', 'aws-powerflow-data', 'grid.json')
+```
+
+### 3️⃣ Create IAM Role and modify `EC2` IAM Role: e.g. `AmazonS3FullAccess` for testing
+
+### 4️⃣ Run on local machine or on `EC2`:
+```bash
+uv run main_ec2_s3.py
+```
+
+The script will read the input files from `S3`, run the simulation locally, and write `is_congested.json` back to `S3`.
+
+---
+
+## 🛠️ Lambda with S3
+
 ---
 
 ## 📧 Author

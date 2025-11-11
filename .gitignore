@@ -13,3 +13,7 @@ wheels/
 *.pem
 
 result/
+
+python/
+
+*.zip

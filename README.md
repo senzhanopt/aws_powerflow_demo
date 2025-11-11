@@ -8,6 +8,7 @@ Demo of Amazon Web Services (AWS) for modern power system calculations.
 - **AWS EC2 / Lambda** – for computation 
 - **S3** – for data storage  
 - **ECS** - for docker images
+- **EMR / PySpark** - big data
 - **Python** – for algorithm development  
 
 ---
@@ -281,6 +282,47 @@ cd ..
 
 ---
 
+## 🛠️ Use `EMR` and `S3` to analyze large dataset:
+
+### 1️⃣ Create a bucket
+
+```bash
+ aws s3api create-bucket --bucket load-data-aws-demo --region eu-north-1 --create-bucket-configuration LocationConstraint=eu-north-1
+```
+
+Send data to `S3`, download the dataset from 
+
+https://data.open-power-system-data.org/household_data/2020-04-15
+
+```bash
+aws s3 cp household_data_1min_singleindex.csv s3://load-data-aws-demo/load_data.csv
+```
+
+### 2️⃣ Create a cluster from `EMR`
+
+```bash
+aws emr create-default-roles
+aws emr create-cluster --name "LoadDataAnalysis" --release-label emr-7.11.0 --applications Name=Spark --ec2-attributes KeyName=powerflow_demo --instance-type r8g.xlarge   --instance-count 3 --use-default-roles
+```
+SSH into the primary node; add SSH to master node security group if timeout error.
+```bash
+ssh -i ~/.ssh/powerflow_demo.pem hadoop@<public DNS>.eu-north-1.compute.amazonaws.com
+```
+
+### 3️⃣ use `pyspark` for data analysis
+
+```python
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName("loadDataAnalysis").getOrCreate()
+
+df = spark.read.csv("s3://load-data-aws-demo/load_data.csv", header=True, inferSchema=True)
+
+df.show(5)  
+
+spark.stop()
+```
+
 ## 📧 Author
 **Sen Zhan**  
 ✉️ [sen.zhan@outlook.com](mailto:sen.zhan@outlook.com)
@@ -288,5 +330,6 @@ cd ..
 ---
 
 ## 📝 License
+
 This project is provided for demonstration purposes.  
 Feel free to adapt or extend it with proper attribution.

@@ -17,3 +17,5 @@ result/
 python/
 
 *.zip
+
+household_data_1min_singleindex.csv

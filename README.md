@@ -287,7 +287,7 @@ cd ..
 ### 1️⃣ Create a bucket
 
 ```bash
- aws s3api create-bucket --bucket load-data-aws-demo --region eu-north-1 --create-bucket-configuration LocationConstraint=eu-north-1
+aws s3api create-bucket --bucket load-data-aws-demo --region eu-north-1 --create-bucket-configuration LocationConstraint=eu-north-1
 ```
 
 Send data to `S3`, download the dataset from 
